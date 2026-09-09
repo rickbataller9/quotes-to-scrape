@@ -2,7 +2,7 @@ from urllib.parse import urljoin
 from fetch import get, write_csv
 from bs4 import BeautifulSoup
 
-BASE = "http://quotes.toscrape.com/tableful/page/10/"
+BASE = "http://quotes.toscrape.com/tableful/"
 
 def parse_page(html):
     soup = BeautifulSoup(html, "lxml")
@@ -33,7 +33,7 @@ def parse_page(html):
 
     for i in clean:
         rows.append({
-            "quote": i[0],
+            "text": i[0],
             "author": i[1],
             "tags": [tag.text for tag in i[2].select("a")]
             })
@@ -44,3 +44,20 @@ def next_url(getNext, current_url):
         return urljoin(BASE, getNext)
     else:
         return None
+
+def crawl():
+    all_rows = []
+    current_url = BASE
+
+    while current_url != None:
+        rows, getNext = parse_page(get(current_url))
+        all_rows.extend(rows)
+        current_url = next_url(getNext ,current_url)
+    
+    return all_rows
+
+if __name__ == "__main__":
+    write_csv(crawl(), "quotes_tableful.csv")
+
+all_rows = crawl()
+print(len(all_rows))
